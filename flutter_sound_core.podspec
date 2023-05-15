@@ -23,10 +23,11 @@ This code was originally inside the flutter_sound/ios directory.
 It has been extracted to be isolated from Flutter and can be used with other frameworks.
                        DESC
 
-  s.homepage         = 'https://github.com/canardoux/flutter_sound'
+  s.homepage         = 'https://github.com/mattohoh/flutter_sound'
   s.license          = { :type => 'MPL2', :file => 'LICENSE' }
   s.author           = { 'larpoux' => 'larpoux@gmail.com' }
-  s.source           = { :git => 'https://github.com/canardoux/flutter_sound_core.git', :tag => '' + s.version.to_s }
+  #s.source           = { :git => 'https://github.com/mattohoh/flutter_sound_core.git', :tag => '' + s.version.to_s }
+  s.source           = { :git => 'file://' + File.dirname(File.realpath(__FILE__)), :tag => 'master' }
 
   s.ios.deployment_target = '10.0'
 

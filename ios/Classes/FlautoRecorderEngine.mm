@@ -52,7 +52,7 @@
         
         if (sRate == 0 || layout == nil)
         {
-                [NSException raise:@"Invalid Audio Session state" format:@"The Audio Session is not in a correct state to do Recording."];
+                [NSException raise:@"222Invalid Audio Session state" format:@"The Audio Session is not in a correct state to do Recording."];
         }
 
         
