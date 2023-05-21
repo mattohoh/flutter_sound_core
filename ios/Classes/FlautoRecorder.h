@@ -30,6 +30,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "Flauto.h"
  
+@class Pitch;
 
 @protocol FlautoRecorderCallback <NSObject>
 - (void)openRecorderCompleted: (bool)success;
@@ -39,6 +40,7 @@
 - (void)resumeRecorderCompleted: (bool)success;
 - (void)pauseRecorderCompleted: (bool)success;
 - (void)updateRecorderProgressDbPeakLevel: normalizedPeakLevel duration: duration;
+- (void)updateRecorderPitch: (Pitch*) pitch duration:(NSNumber*) duration;
 - (void)recordingData: (NSData*)data;
 - (void)log: (t_LOG_LEVEL)level msg: (NSString*)msg;
 @end

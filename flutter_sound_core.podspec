@@ -26,13 +26,13 @@ It has been extracted to be isolated from Flutter and can be used with other fra
   s.homepage         = 'https://github.com/mattohoh/flutter_sound'
   s.license          = { :type => 'MPL2', :file => 'LICENSE' }
   s.author           = { 'larpoux' => 'larpoux@gmail.com' }
-  #s.source           = { :git => 'https://github.com/mattohoh/flutter_sound_core.git', :tag => '' + s.version.to_s }
-  s.source           = { :git => 'file://' + File.dirname(File.realpath(__FILE__)), :tag => 'master' }
+  s.source           = { :git => 'https://github.com/mattohoh/flutter_sound_core.git', :tag => '' + s.version.to_s }
+  #s.source           = { :git => 'file://' + File.dirname(File.realpath(__FILE__)), :tag => 'master' }
 
-  s.ios.deployment_target = '10.0'
+  s.ios.deployment_target = '11.0'
 
   s.source_files = 'ios/Classes/*'
   s.frameworks = 'AVFoundation', 'MediaPlayer'
-
+  s.dependency 'Beethoven', '~> 5.0.0'
 
 end

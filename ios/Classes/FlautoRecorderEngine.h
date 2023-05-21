@@ -27,6 +27,8 @@
 #ifndef FlautoRecorderEngine_h
 #define FlautoRecorderEngine_h
 
+@class PitchWithTime;
+@class PitchDetector;
 
 #import <AVFoundation/AVFoundation.h>
 #import "FlautoRecorder.h"
@@ -45,6 +47,7 @@ public:
         virtual NSNumber* recorderProgress() = 0;
         virtual NSNumber* dbPeakProgress() = 0;
         virtual int getStatus() = 0;
+    virtual PitchWithTime* currentPitch() = 0;
 
         int16_t maxAmplitude = 0;
         FlautoRecorder* flautoRecorder; // Owner
@@ -60,6 +63,10 @@ private:
         AVAudioEngine* engine;
         NSFileHandle * fileHandle;
         AVAudioConverterInputStatus inputStatus = AVAudioConverterInputStatus_NoDataNow;
+    AVAudioMixerNode* mixerNode;
+    NSTimeInterval nextTap;
+    PitchDetector* pitchDetector;
+    
         long dateCumul = 0;
         long previousTS;
         int status;
@@ -73,7 +80,7 @@ public:
         virtual void resumeRecorder();
         virtual NSNumber* dbPeakProgress();
         virtual int getStatus();
-        
+    virtual PitchWithTime* currentPitch();
 
 
 };
@@ -96,7 +103,7 @@ public:
         NSNumber* recorderProgress();
         virtual NSNumber* dbPeakProgress();
         virtual int getStatus();
-
+    virtual PitchWithTime* currentPitch();
 };
 
 #endif // #ifdef __cplusplus

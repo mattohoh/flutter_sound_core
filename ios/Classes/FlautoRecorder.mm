@@ -29,7 +29,7 @@
 #import "Flauto.h"
 #import "FlautoRecorder.h"
 #import "FlautoRecorderEngine.h"
-
+#import <flutter_sound_core/flutter_sound_core-Swift.h>
 
 //-------------------------------------------------------------------------------------------------------------------------------------
 
@@ -353,8 +353,20 @@ AudioRecInterface* audioRec;
         NSNumber* duration = audioRec ->recorderProgress();
         NSNumber * normalizedPeakLevel = audioRec ->dbPeakProgress();
         [m_callBack updateRecorderProgressDbPeakLevel: normalizedPeakLevel duration: duration];
+    [self updateRecorderPitch];
 }
  
+- (void)updateRecorderPitch
+{
+    PitchWithTime * pitch = audioRec ->currentPitch();
+
+    if (pitch == nil) return;
+    
+    //NSLog(@"%@ %@", @(pitch.time), audioRec ->recorderProgress());
+
+    [m_callBack updateRecorderPitch:pitch.pitch duration:@(pitch.time)];
+}
+
 - (int)getStatus
 {
         int r = 0;

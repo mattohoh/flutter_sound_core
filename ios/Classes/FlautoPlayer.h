@@ -28,7 +28,6 @@
 #import "FlautoPlayerEngine.h"
 
 
-
 @protocol FlautoPlayerCallback <NSObject>
 
 - (void)openPlayerCompleted: (bool)success;

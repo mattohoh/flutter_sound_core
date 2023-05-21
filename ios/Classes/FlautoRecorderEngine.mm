@@ -30,7 +30,7 @@
 
 #import "Flauto.h"
 #import "FlautoRecorderEngine.h"
-
+#import <flutter_sound_core/flutter_sound_core-Swift.h>
 
 //-------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -42,9 +42,23 @@
         dateCumul = 0;
         previousTS = 0;
         status = 0;
-
+        PitchDetector* pitchDetector = [[PitchDetector alloc] init];
+    this->pitchDetector = pitchDetector;
+    
         AVAudioInputNode* inputNode = [engine inputNode];
-        AVAudioFormat* inputFormat = [inputNode outputFormatForBus: 0];
+    
+    AVAudioMixerNode* mixerNode = [[AVAudioMixerNode alloc] init];
+    
+    this->mixerNode = mixerNode;
+    mixerNode.volume = 0;
+    [engine attachNode:mixerNode];
+    [engine connect:inputNode to:mixerNode format:[inputNode outputFormatForBus: 0]];
+    [engine connect:mixerNode to:[engine mainMixerNode] format:[inputNode outputFormatForBus: 0]];
+
+    
+        //AVAudioFormat* inputFormat = [inputNode outputFormatForBus: 0];
+    AVAudioFormat* inputFormat = [mixerNode outputFormatForBus: 0];
+    
         double sRate = [inputFormat sampleRate];
         // -AVAudioChannelCount channelCount = [inputFormat channelCount];
         AVAudioChannelLayout* layout = [inputFormat channelLayout];
@@ -52,7 +66,7 @@
         
         if (sRate == 0 || layout == nil)
         {
-                [NSException raise:@"222Invalid Audio Session state" format:@"The Audio Session is not in a correct state to do Recording."];
+                [NSException raise:@"Invalid Audio Session state" format:@"The Audio Session is not in a correct state to do Recording."];
         }
 
         
@@ -74,12 +88,24 @@
         {
                 fileHandle = nil;
         }
+    
+    [inputNode installTapOnBus:0
+                               bufferSize:200
+                                   format:nil
+                                    block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when) {
+        //NSLog(@"buffer size: %d", buffer.frameLength);
+        [pitchDetector detectWithBuffer:buffer atTime:when duration:this->recorderProgress()];
+    }];
 
 
-        [inputNode installTapOnBus: 0 bufferSize: 20480 format: inputFormat block:
-        ^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when)
+    CGFloat tapBufferSize = 20480;
+    CGFloat tapInterval = tapBufferSize / sRate;
+    
+        [mixerNode installTapOnBus: 0 bufferSize: 20480 format: inputFormat block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when)
         {
-                inputStatus = AVAudioConverterInputStatus_HaveData ;
+            nextTap = [[NSDate date] timeIntervalSince1970] + tapInterval;
+
+            inputStatus = AVAudioConverterInputStatus_HaveData ;
                 AVAudioPCMBuffer* convertedBuffer = [[AVAudioPCMBuffer alloc]initWithPCMFormat: recordingFormat frameCapacity: [buffer frameCapacity]];
 
 
@@ -120,7 +146,7 @@
                                 {
                                         maxAmplitude = curSample;
                                 }
-                
+
                         }
                 }
         }];
@@ -135,15 +161,23 @@ void AudioRecorderEngine::startRecorder()
 
 void AudioRecorderEngine::stopRecorder()
 {
-        [engine stop];
-        [fileHandle closeFile];
-        if (previousTS != 0)
-        {
-                dateCumul += CACurrentMediaTime() * 1000 - previousTS;
-                previousTS = 0;
-        }
-        status = 0;
-        engine = nil;
+    NSTimeInterval wait = nextTap - [[NSDate date] timeIntervalSince1970];
+    if (wait > 0) {
+        [flautoRecorder logDebug:[NSString stringWithFormat: @"Wait %.2f seconds for tap processing", wait]];
+        [NSThread sleepForTimeInterval:wait];
+    }
+    [flautoRecorder logDebug:@"Stopping record engine"];
+
+    [mixerNode removeTapOnBus:0];
+    [engine stop];
+    [fileHandle closeFile];
+    if (previousTS != 0)
+    {
+        dateCumul += CACurrentMediaTime() * 1000 - previousTS;
+        previousTS = 0;
+    }
+    status = 0;
+    engine = nil;
 }
 
 void AudioRecorderEngine::resumeRecorder()
@@ -207,6 +241,9 @@ int AudioRecorderEngine::getStatus()
      return status;
 }
 
+PitchWithTime* AudioRecorderEngine::currentPitch() {
+    return [this->pitchDetector currentPitch];
+}
 
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -285,3 +322,6 @@ int avAudioRec::getStatus()
 }
 
 
+PitchWithTime* avAudioRec::currentPitch() {
+    return nil;
+}
