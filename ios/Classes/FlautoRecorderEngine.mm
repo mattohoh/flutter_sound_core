@@ -37,6 +37,11 @@
 
 /* ctor */ AudioRecorderEngine::AudioRecorderEngine(t_CODEC coder, NSString* path, NSMutableDictionary* audioSettings, FlautoRecorder* owner )
 {
+    NSNumber* sampleRate = audioSettings [AVSampleRateKey];
+    [[AVAudioSession sharedInstance] setPreferredSampleRate:48000 error:nil];
+
+    //AVAudioSessionPortDescription* preferredInput = [[AVAudioSession sharedInstance] preferredInput];
+    
         flautoRecorder = owner;
         engine = [[AVAudioEngine alloc] init];
         dateCumul = 0;
@@ -72,7 +77,6 @@
         
         
         NSNumber* nbChannels = audioSettings [AVNumberOfChannelsKey];
-        NSNumber* sampleRate = audioSettings [AVSampleRateKey];
         //sampleRate = [NSNumber numberWithInt: 44000];
         AVAudioFormat* recordingFormat = [[AVAudioFormat alloc] initWithCommonFormat: AVAudioPCMFormatInt16 sampleRate: sampleRate.doubleValue channels: (unsigned int)(nbChannels.unsignedIntegerValue) interleaved: YES];
         AVAudioConverter* converter = [[AVAudioConverter alloc]initFromFormat: inputFormat toFormat: recordingFormat];
@@ -101,16 +105,15 @@
     CGFloat tapBufferSize = 20480;
     CGFloat tapInterval = tapBufferSize / sRate;
     
-        [mixerNode installTapOnBus: 0 bufferSize: 20480 format: inputFormat block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when)
+        [mixerNode installTapOnBus: 0 bufferSize: tapBufferSize format: inputFormat block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when)
         {
             nextTap = [[NSDate date] timeIntervalSince1970] + tapInterval;
 
             inputStatus = AVAudioConverterInputStatus_HaveData ;
-                AVAudioPCMBuffer* convertedBuffer = [[AVAudioPCMBuffer alloc]initWithPCMFormat: recordingFormat frameCapacity: [buffer frameCapacity]];
+                AVAudioPCMBuffer* convertedBuffer = [[AVAudioPCMBuffer alloc]initWithPCMFormat: recordingFormat frameCapacity: recordingFormat.sampleRate * buffer.frameLength / buffer.format.sampleRate];
 
 
-                AVAudioConverterInputBlock inputBlock =
-                ^AVAudioBuffer*(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus)
+                AVAudioConverterInputBlock inputBlock = ^AVAudioBuffer*(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus)
                 {
                         *outStatus = inputStatus;
                         inputStatus =  AVAudioConverterInputStatus_NoDataNow;
